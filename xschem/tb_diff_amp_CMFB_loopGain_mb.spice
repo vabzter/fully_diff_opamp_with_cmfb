@@ -1,0 +1,242 @@
+** sch_path: /foss/designs/Amplifier-Design/xschem/tb_diff_amp_CMFB_loopGain_mb.sch
+**.subckt tb_diff_amp_CMFB_loopGain_mb
+x1 vn11 AVDD vinp vinn AVSS vp11 vr1 vbias DS_cic_bms_afe_iadc_first_int_OTA_gm1
+x2 vn11 AVDD vop vp11 AVSS von vbias DS_cic_bms_afe_iadc_first_int_OTA_gm2
+x3 vn11 net2 DS_cic_bms_afe_iadc_first_int_OTA_miller_cap
+x5 von net2 AVSS DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor
+x7 i_5uA AVSS AVDD vbias DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt
+x9 von vdiv vop AVSS DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider
+VDD AVDD GND 5
+VDD1 AVSS GND 0
+C5 vop GND 2p
+C1 von GND 2p
+V3 vinn GND dc 2.5
+V4 vinp GND dc 2.5
+I2 AVDD i_5uA 5u
+V5 vcom GND 2.5
+* noconn #net3
+Vtest2 vf1 vr1 dc 0 ac 1
+C2 vop1 GND 2p
+C3 von1 GND 2p
+I1 AVDD i1_5uA 5u
+* noconn #net7
+Vir1 vsen net8 0
+.save i(vir1)
+Vif1 net8 net6 0
+.save i(vif1)
+Itest1 GND net8 dc 0 ac 1
+x4 vp11 net1 DS_cic_bms_afe_iadc_first_int_OTA_miller_cap
+x6 vop net1 AVSS DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor
+x14 i1_5uA AVSS AVDD vbias1 DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt
+x10 von1 vdiv1 vop1 AVSS DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider
+x11 AVDD AVSS vcom vdiv vbias net3 vf1 DS_cic_bms_afe_iadc_first_int_OTA_CMFB
+x12 AVDD AVSS vcom vdiv1 vbias1 net7 net6 DS_cic_bms_afe_iadc_first_int_OTA_CMFB
+x8 von11 AVDD vinp vinn AVSS vop11 vsen vbias1 DS_cic_bms_afe_iadc_first_int_OTA_gm1
+x13 von11 AVDD vop1 vop11 AVSS von1 vbias1 DS_cic_bms_afe_iadc_first_int_OTA_gm2
+x15 von11 net5 DS_cic_bms_afe_iadc_first_int_OTA_miller_cap
+x16 von1 net5 AVSS DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor
+x17 vop11 net4 DS_cic_bms_afe_iadc_first_int_OTA_miller_cap
+x18 vop1 net4 AVSS DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor
+**** begin user architecture code
+
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice cap_mim
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice res_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice moscap_typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+* .lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice res_statistical
+
+
+
+.option wnflag=1
+.option savecurrents
+.option savevoltages
+.control
+save all
+
+op
+remzerovec
+
+* AC Analysis
+ac dec 101 1 100G
+remzerovec
+write tb_OTA_gf180_loogGain_mb.raw
+set appendwrite
+
+* Middlebrook's Method
+let tv=-v(vf1)/v(vr1)
+let ti=-i(vif1)/i(vir1)
+let tmb=(tv*ti - 1)/(tv + ti + 2)
+
+let gain_db = db(tmb)
+let phase_unwrapped = 180/pi*cphase(tmb)
+
+plot gain_dB ylabel 'Magnitude '
+plot phase_unwrapped ylabel 'Phase '
+
+meas ac A0_db find gain_db at=10
+meas ac UGB when gain_db=0 fall=1
+meas ac PHASE_UGB find phase_unwrapped at=$&UGB
+
+
+let PM = 180 + PHASE_UGB
+
+print A0_db UGB PHASE_UGB pm
+
+write tb_diff_amp_CMFB_loopGain.raw
+.endc
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_gm1.sym # of pins=8
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_gm1.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_gm1.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_gm1 vop AVDD vinp vinn AVSS von vsense vbias
+*.ipin vinp
+*.ipin vinn
+*.opin von
+*.opin vop
+*.ipin AVDD
+*.ipin AVSS
+*.ipin vsense
+*.ipin vbias
+XM1 vop vinn net1 AVSS nfet_05v0 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM2 von vinp net1 AVSS nfet_05v0 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM3 vop vsense AVDD AVDD pfet_05v0 L=1.2u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM4 von vsense AVDD AVDD pfet_05v0 L=1.2u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM5 net1 vbias AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=8
+XM11 AVSS AVSS AVSS AVSS nfet_05v0 L=1u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM12 AVDD AVDD AVDD AVDD pfet_05v0 L=1.2u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM13 AVSS AVSS AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_gm2.sym # of pins=7
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_gm2.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_gm2.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_gm2 vinp AVDD vop vinn AVSS von vbias
+*.ipin vinp
+*.ipin vinn
+*.opin von
+*.opin vop
+*.ipin AVDD
+*.ipin AVSS
+*.ipin vbias
+XM1 von vinp AVDD AVDD pfet_05v0 L=0.6u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=6
+XM7 von vbias AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=10
+XM8 vop vinn AVDD AVDD pfet_05v0 L=0.6u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=6
+XM9 vop vbias AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=10
+XM2 AVSS AVSS AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM3 AVDD AVDD AVDD AVDD pfet_05v0 L=0.6u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_miller_cap.sym # of pins=2
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_miller_cap.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_miller_cap.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_miller_cap plus minus
+*.iopin plus
+*.iopin minus
+XC3 minus plus cap_mim_2f0fF c_width=11.68e-6 c_length=24e-6
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor.sym # of pins=3
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_nulling_resistor plus minus AVSS
+*.ipin plus
+*.ipin minus
+*.ipin AVSS
+XR2 plus net1 AVSS ppolyf_u_1k_6p0 r_width=1e-6 r_length=2.75e-6
+XR3 net1 minus AVSS ppolyf_u_1k_6p0 r_width=1e-6 r_length=2.75e-6
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt.sym # of pins=4
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_bias_ckt i_5uA AVSS AVDD vbias
+*.opin vbias
+*.ipin AVSS
+*.ipin AVDD
+*.ipin i_5uA
+XM10 i_5uA i_5uA AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM1 net1 i_5uA AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM2 net1 net1 AVDD AVDD pfet_05v0 L=2u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM3 vbias net1 AVDD AVDD pfet_05v0 L=2u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM4 vbias vbias AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM5 AVSS AVSS AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+XM6 AVDD AVDD AVDD AVDD pfet_05v0 L=2u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider.sym # of pins=4
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_CMFB_resistor_divider vinn vsense vinp AVSS
+*.ipin vinp
+*.ipin vinn
+*.iopin vsense
+*.ipin AVSS
+XR1 vinn vsense AVSS ppolyf_u_1k_6p0 r_width=1e-6 r_length=35e-6
+XR3 vsense vinp AVSS ppolyf_u_1k_6p0 r_width=1e-6 r_length=35e-6
+.ends
+
+
+* expanding   symbol:  DS_cic_bms_afe_iadc_first_int_OTA_CMFB.sym # of pins=7
+** sym_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_CMFB.sym
+** sch_path: /foss/designs/Amplifier-Design/xschem/DS_cic_bms_afe_iadc_first_int_OTA_CMFB.sch
+.subckt DS_cic_bms_afe_iadc_first_int_OTA_CMFB AVDD AVSS vinn vinp vbias vop von
+*.ipin AVDD
+*.ipin AVSS
+*.ipin vinn
+*.ipin vinp
+*.ipin vbias
+*.opin vop
+*.opin von
+XM18 vop vinn net1 AVSS nfet_05v0 L=1u W=4.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=8
+XM19 von vinp net1 AVSS nfet_05v0 L=1u W=4.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=8
+XM20 von von AVDD AVDD pfet_05v0 L=1.6u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=6
+XM21 vop vop AVDD AVDD pfet_05v0 L=1.6u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=6
+XM22 net1 vbias AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM6 AVDD AVDD AVDD AVDD pfet_05v0 L=1.6u W=0.8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=2
+XM7 AVSS AVSS AVSS AVSS nfet_05v0 L=1u W=4.5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=8
+XM8 AVSS AVSS AVSS AVSS nfet_05v0 L=2u W=1u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2)
++ * (W/nf + 0.18u)' ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=4
+.ends
+
+.GLOBAL GND
+.GLOBAL AVDD
+.end
